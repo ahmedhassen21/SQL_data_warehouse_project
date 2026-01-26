@@ -1,0 +1,90 @@
+/* =========================================================
+   PROJECT         : DataWarehouse Initialization Script
+   AUTHOR          : Ahmed Hassan
+   DATE            : 27-Jan-2026
+   PURPOSE         : Create a clean DataWarehouse with Medallion Architecture
+   ENVIRONMENT     : SQL Server
+   VERSION         : 1.0
+
+   ⚠️ WARNING:
+      This script will PERMANENTLY DROP the 'DataWarehouse' database
+      if it already exists. Any existing data will be LOST.
+      ONLY run this in development, testing, or sandbox environments.
+   ========================================================= */
+
+/* -------------------------------
+   STEP 1: Switch to master database
+   ------------------------------- */
+USE master;
+GO
+
+/* -------------------------------
+   STEP 2: Check if database exists
+   If it exists:
+      - Force close all connections
+      - Rollback open transactions immediately
+      - Drop the database permanently
+   ------------------------------- */
+IF EXISTS (
+    SELECT 1
+    FROM sys.databases
+    WHERE name = 'DataWarehouse'
+)
+BEGIN
+    PRINT '⚠️ DataWarehouse exists. Closing connections and dropping database...';
+
+    -- Force single user mode and rollback active connections
+    ALTER DATABASE DataWarehouse
+    SET SINGLE_USER
+    WITH ROLLBACK IMMEDIATE;
+
+    -- Drop the existing database
+    DROP DATABASE DataWarehouse;
+
+    PRINT '✅ Existing database dropped successfully.';
+END
+ELSE
+BEGIN
+    PRINT 'ℹ️ DataWarehouse does not exist. Proceeding to create new database.';
+END
+GO
+
+/* -------------------------------
+   STEP 3: Create a new clean DataWarehouse
+   ------------------------------- */
+CREATE DATABASE DataWarehouse;
+GO
+
+PRINT '✅ DataWarehouse created successfully.';
+
+/* -------------------------------
+   STEP 4: Switch context to the new database
+   ------------------------------- */
+USE DataWarehouse;
+GO
+
+/* -------------------------------
+   STEP 5: Create Schemas for Medallion Architecture
+      Bronze  : Raw data
+      Silver  : Cleaned / transformed data
+      Gold    : Business-ready data
+   ------------------------------- */
+CREATE SCHEMA Bronze;
+GO
+PRINT '✅ Bronze schema created (Raw Data).';
+GO
+CREATE SCHEMA Silver;
+GO
+PRINT '✅ Silver schema created (Cleaned / Transformed Data).';
+GO
+CREATE SCHEMA Gold;
+GO
+PRINT '✅ Gold schema created (Business-ready Data).';
+
+/* =========================================================
+   SCRIPT COMPLETE
+   ✅ All schemas and database initialized successfully
+   ⚠️ Reminder:
+      Any previous database named 'DataWarehouse' was permanently deleted.
+      Ensure you are in a safe environment before running.
+   ========================================================= */
